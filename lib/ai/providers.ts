@@ -2,15 +2,38 @@ import {
   customProvider,
   extractReasoningMiddleware,
   wrapLanguageModel,
-} from 'ai';
-import { xai } from '@ai-sdk/xai';
-import { isTestEnvironment } from '../constants';
+} from "ai";
+import { xai } from "@ai-sdk/xai";
+import { isTestEnvironment } from "../constants";
 import {
   artifactModel,
   chatModel,
   reasoningModel,
   titleModel,
-} from './models.test';
+} from "./models.test";
+import { createOpenAI } from "@ai-sdk/openai";
+import OpenAI from "openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { GoogleGenAI } from "@google/genai";
+
+
+export const googleGenAIProvider = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GEMINI_AI_KEY,
+});
+
+export const googleAISDKProvider = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GEMINI_AI_KEY,
+});
+
+export const openaiProvider = createOpenAI({
+  apiKey: process.env.AI_API_KEY,
+  compatibility: "strict",
+});
+
+export const openaiClient = new OpenAI({
+  apiKey: process.env.AI_API_KEY,
+});
+
 
 export const myProvider = isTestEnvironment
   ? customProvider({
@@ -23,15 +46,13 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': xai('grok-2-vision-1212'),
+        'chat-model': openaiProvider('gpt-4o'),
         'chat-model-reasoning': wrapLanguageModel({
-          model: xai('grok-3-mini-beta'),
+          model: openaiProvider('o3-mini'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': xai('grok-2-1212'),
-        'artifact-model': xai('grok-2-1212'),
-      },
-      imageModels: {
-        'small-model': xai.image('grok-2-image'),
+        
+        'title-model': openaiProvider('gpt-4o'),
+        'artifact-model': openaiProvider('gpt-4o'),
       },
     });
