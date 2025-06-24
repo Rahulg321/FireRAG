@@ -36,6 +36,8 @@ import { after } from 'next/server';
 import type { Chat } from '@/lib/db/schema';
 import { differenceInSeconds } from 'date-fns';
 import { ChatSDKError } from '@/lib/errors';
+import { addResource } from '@/lib/ai/tools/add-resource';
+import { getInformation } from '@/lib/ai/tools/get-information';
 
 export const maxDuration = 60;
 
@@ -150,19 +152,20 @@ export async function POST(request: Request) {
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
-          maxSteps: 5,
-          experimental_activeTools:
-            selectedChatModel === 'chat-model-reasoning'
-              ? []
-              : [
+          maxSteps: 10,
+          experimental_activeTools:[
                   'getWeather',
                   'createDocument',
                   'updateDocument',
                   'requestSuggestions',
+                  'addResource',
+                  'getInformation',
                 ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
           tools: {
+            addResource,
+            getInformation,
             getWeather,
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
@@ -234,6 +237,7 @@ export async function POST(request: Request) {
       return new Response(stream);
     }
   } catch (error) {
+    
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
