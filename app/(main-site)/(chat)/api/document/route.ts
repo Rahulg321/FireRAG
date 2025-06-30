@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     content,
     title,
     kind,
-    userId: session.user.id,
+    userId: session.user.id as string,
   });
 
   return Response.json(document, { status: 200 });

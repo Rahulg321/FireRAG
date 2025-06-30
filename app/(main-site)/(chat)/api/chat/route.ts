@@ -5,7 +5,7 @@ import {
   smoothStream,
   streamText,
 } from 'ai';
-import { auth, type UserType } from '@/app/(main-site)/(auth)/auth';
+import { auth } from '@/app/(main-site)/(auth)/auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import {
   createStreamId,
@@ -83,10 +83,10 @@ export async function POST(request: Request) {
       return new ChatSDKError('unauthorized:chat').toResponse();
     }
 
-    const userType: UserType = session.user.type;
+    const userType: string = "user";
 
     const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
+      id: session.user.id as string,
       differenceInHours: 24,
     });
 
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
 
       await saveChat({
         id,
-        userId: session.user.id,
+        userId: session.user.id as string,
         title,
         visibility: selectedVisibilityType,
       });
