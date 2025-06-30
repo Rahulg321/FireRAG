@@ -2,27 +2,16 @@ import React from "react";
 
 export default function DemoEmbedPage() {
   return (
-    <div
-      style={{
-        width: "100%",
-        backgroundColor: "red",
-        height: "100vh",
-        color: "white",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#f5f5f5",
-        fontFamily: "sans-serif",
-        borderRadius: 8,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      }}
-    >
-      <h2 style={{ color: "white", fontSize: "24px" }}>
-        Hello from the embedded bot!
-      </h2>
-      <p style={{ color: "white", fontSize: "16px" }}>
+    <div className="flex flex-col items-center justify-center h-screen bg-red-500 text-white">
+      <h1 className="text-2xl font-bold">Hello from the embedded bot!</h1>
+      <p className="text-lg">
         This is a static demo page rendered for iframe embedding.
+      </p>
+      <p className="text-lg">
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas porro
+        asperiores, eos quae consectetur amet eaque facilis facere cumque fuga
+        modi tempore excepturi minima accusantium totam harum laudantium
+        blanditiis adipisci.
       </p>
     </div>
   );
