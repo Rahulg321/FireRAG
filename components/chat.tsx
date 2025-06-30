@@ -66,6 +66,7 @@ export function Chat({
     fetch: fetchWithErrorHandlers,
     experimental_prepareRequestBody: (body) => ({
       id,
+
       message: body.messages.at(-1),
       selectedChatModel: initialChatModel,
       selectedVisibilityType: visibilityType,
@@ -106,6 +107,8 @@ export function Chat({
   );
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+  
+  
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
   useAutoResume({

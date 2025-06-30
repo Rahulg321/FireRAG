@@ -62,9 +62,12 @@ export const systemPrompt = ({
   requestHints: RequestHints;
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
-
   return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
 };
+
+
+
+
 
 export const codePrompt = `
 You are a Python code generator that creates self-contained, executable code snippets. When writing code:
