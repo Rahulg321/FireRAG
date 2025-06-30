@@ -78,6 +78,14 @@ export const authConfig = {
             .update(userTable)
             .set({ emailVerified: new Date() })
             .where(eq(userTable.id, user.id));
+
+          // Generate and attach accessToken for OAuth users
+          const accessToken = sign(
+            { id: user.id, type: "oauth" },
+            process.env.AUTH_SECRET as string
+          );
+          console.log("created an accessToken for oauth user", accessToken);
+          (user as any).accessToken = accessToken;
         }
         return true;
       }
@@ -102,18 +110,29 @@ export const authConfig = {
       }
       return true;
     },
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
+    jwt({ token, user, account }) {
+      console.log("jwt callback", token, user, account);
+      // For OAuth logins, generate accessToken on first sign in
+      if (account && account.provider !== "credentials") {
+        const accessToken = sign(
+          { id: token.id || user?.id, type: "oauth" },
+          process.env.AUTH_SECRET as string
+        );
+        token.accessToken = accessToken;
+      } else if (user && (user as any).accessToken) {
+        token.accessToken = (user as any).accessToken;
       }
-
+      // Ensure token.accessToken persists across sessions
       return token;
     },
     session({ session, token }) {
+      console.log("session callback", session, token);
       if (session.user) {
         session.user.id = token.id as string;
+        if (token.accessToken) {
+          (session.user as any).accessToken = token.accessToken;
+        }
       }
-
       return session;
     },
   },

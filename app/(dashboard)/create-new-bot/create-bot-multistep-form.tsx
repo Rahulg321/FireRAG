@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Check, Upload } from "lucide-react";
+import { toast } from "sonner";
 
 const steps = [
   { id: 1, title: "Set a Chatbot Name", completed: false },
@@ -61,9 +62,9 @@ export default function CreateBotMultistepForm({
 
   const [formData, setFormData] = useState({
     language: "en-gb",
-    greeting: "👋 Hello, how can I help you?",
+    greeting: "\uD83D\uDC4B Hello, how can I help you?",
     avatar: "",
-    dataFile: null as File | null,
+    dataFiles: [] as { file: File; name: string; description: string }[],
     brandFile: null as File | null,
     tone: "",
     instructions: "",
@@ -77,6 +78,12 @@ export default function CreateBotMultistepForm({
   };
 
   const handleNext = () => {
+    if (currentStep === 4) {
+      if (formData.dataFiles.length === 0) {
+        toast.error("Please upload at least one data file");
+        return;
+      }
+    }
     if (currentStep < steps.length) {
       updateStep(currentStep + 1);
     }
@@ -88,9 +95,43 @@ export default function CreateBotMultistepForm({
     }
   };
 
+  const handleDataFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const newFiles = Array.from(files).map((file) => ({
+        file,
+        name: file.name,
+        description: "",
+      }));
+      setFormData((prev) => ({
+        ...prev,
+        dataFiles: [...prev.dataFiles, ...newFiles],
+      }));
+    }
+  };
+
+  const handleDataFileChange = (
+    index: number,
+    field: "name" | "description",
+    value: string
+  ) => {
+    setFormData((prev) => {
+      const updatedFiles = [...prev.dataFiles];
+      updatedFiles[index] = { ...updatedFiles[index], [field]: value };
+      return { ...prev, dataFiles: updatedFiles };
+    });
+  };
+
+  const handleRemoveDataFile = (index: number) => {
+    setFormData((prev) => {
+      const updatedFiles = [...prev.dataFiles];
+      updatedFiles.splice(index, 1);
+      return { ...prev, dataFiles: updatedFiles };
+    });
+  };
+
   const handleFileUpload =
-    (field: "dataFile" | "brandFile") =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (field: "brandFile") => (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
         setFormData((prev) => ({ ...prev, [field]: file }));
@@ -103,11 +144,12 @@ export default function CreateBotMultistepForm({
       language: formData.language,
       greeting: formData.greeting,
       avatar: formData.avatar,
-      dataFile: formData.dataFile,
+      dataFiles: formData.dataFiles,
       brandFile: formData.brandFile,
       tone: formData.tone,
       instructions: formData.instructions,
     });
+    toast.success("Bot created successfully");
   };
 
   const renderStepContent = () => {
@@ -222,15 +264,71 @@ export default function CreateBotMultistepForm({
               <p className="text-sm mb-2">Upload your data files</p>
               <Input
                 type="file"
-                onChange={handleFileUpload("dataFile")}
+                onChange={handleDataFilesUpload}
                 className="max-w-xs mx-auto"
                 accept=".pdf,.doc,.docx,.txt"
+                multiple
               />
-              {formData.dataFile && (
-                <p className="mt-2 text-xs text-success-foreground">
-                  {formData.dataFile.name}
-                </p>
-              )}
+              <div className="mt-4 space-y-4">
+                {formData.dataFiles.length > 0 &&
+                  formData.dataFiles.map((data, idx) => (
+                    <div
+                      key={idx}
+                      className="border rounded p-3 mb-2 bg-muted text-left"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">
+                          File: {data.file.name}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleRemoveDataFile(idx)}
+                          aria-label="Remove file"
+                        >
+                          &times;
+                        </Button>
+                      </div>
+                      <div className="mb-2">
+                        <Label
+                          htmlFor={`datafile-name-${idx}`}
+                          className="text-xs"
+                        >
+                          File Name
+                        </Label>
+                        <Input
+                          id={`datafile-name-${idx}`}
+                          value={data.name}
+                          onChange={(e) =>
+                            handleDataFileChange(idx, "name", e.target.value)
+                          }
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor={`datafile-desc-${idx}`}
+                          className="text-xs"
+                        >
+                          Description (optional)
+                        </Label>
+                        <Textarea
+                          id={`datafile-desc-${idx}`}
+                          value={data.description}
+                          onChange={(e) =>
+                            handleDataFileChange(
+                              idx,
+                              "description",
+                              e.target.value
+                            )
+                          }
+                          className="mt-1 h-16 resize-none"
+                          placeholder="Add a description for this file (optional)"
+                        />
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         );
@@ -336,9 +434,24 @@ export default function CreateBotMultistepForm({
                         "Not selected"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex flex-col gap-1">
                     <span>Data:</span>
-                    <span>{formData.dataFile?.name || "Not uploaded"}</span>
+                    {formData.dataFiles.length > 0 ? (
+                      <ul className="ml-4 list-disc">
+                        {formData.dataFiles.map((data, idx) => (
+                          <li key={idx}>
+                            <span className="font-medium">{data.name}</span>
+                            {data.description && (
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                ({data.description})
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span className="ml-4">Not uploaded</span>
+                    )}
                   </div>
                   <div className="flex justify-between">
                     <span>Brand:</span>
@@ -361,6 +474,16 @@ export default function CreateBotMultistepForm({
     }
   };
 
+  // Determine if the Next button should be disabled
+  const isNextDisabled = () => {
+    if (currentStep === 4) {
+      if (formData.dataFiles.length === 0) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row">
       {/* Sidebar */}
@@ -381,8 +504,8 @@ export default function CreateBotMultistepForm({
                       isActive
                         ? "bg-primary text-primary-foreground shadow"
                         : isCompleted
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:bg-accent/60"
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:bg-accent/60"
                     }
                   `}
                   onClick={() => updateStep(step.id)}
@@ -421,16 +544,23 @@ export default function CreateBotMultistepForm({
             >
               Previous
             </Button>
-            <Button
-              onClick={
-                currentStep === steps.length ? handleCreateBot : handleNext
-              }
-              disabled={false}
-              size="lg"
-              className="w-32"
-            >
-              {currentStep === steps.length ? "Create Bot" : "Next"}
-            </Button>
+            <div>
+              <Button
+                onClick={
+                  currentStep === steps.length ? handleCreateBot : handleNext
+                }
+                disabled={isNextDisabled()}
+                size="lg"
+                className="w-32"
+              >
+                {currentStep === steps.length ? "Create Bot" : "Next"}
+              </Button>
+              {isNextDisabled() && (
+                <p className="text-sm text-red-500">
+                  Please upload at least one data file
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </main>

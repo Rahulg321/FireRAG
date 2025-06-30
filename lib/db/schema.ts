@@ -602,3 +602,106 @@ export const travel = pgTable("travel", {
     .notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+
+
+
+export const language = pgEnum("language", ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Russian", "Chinese", "Japanese", "Korean"]);
+
+
+
+
+
+export const bot = pgTable("bot", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  botLanguage: language("bot_language").notNull().default("English"),
+  userId: uuid("userId")
+    .references(() => user.id)
+    .notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type Bot = InferSelectModel<typeof bot>;
+
+
+
+
+export const botDocuments = pgTable(
+  "bot_documents",
+  {
+    id: uuid("id").notNull().defaultRandom(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bot.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    content: text("content"),
+    fileUrl: text("file_url"),
+    kind: varchar("kind", {
+      enum: [
+        "pdf",
+        "doc",
+        "docx",
+        "txt",
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "webp",
+        "xls",
+        "xlsx",
+        "image",
+        "excel",
+        "audio",
+      ],
+    })
+      .notNull()
+      .default("pdf"),
+    tags: text("tags").array(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (pgTable) => ({
+    botIdRef: foreignKey({
+      columns: [pgTable.botId],
+      foreignColumns: [bot.id],
+    }),
+
+    pk: primaryKey({ columns: [pgTable.id] }),
+  })
+);
+
+
+
+export const botEmbeddings = pgTable(
+  "bot_embeddings",
+  {
+    id: uuid("id").notNull().defaultRandom(),
+
+    botDocumentId: uuid("bot_document_id")
+      .notNull()
+      .references(() => botDocuments.id, { onDelete: "cascade" }),
+
+    content: text("content").notNull(),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.id] }),
+    botDocumentIdRef: foreignKey({
+      columns: [table.botDocumentId],
+      foreignColumns: [botDocuments.id],
+    }),
+
+    embeddingIndex: index("embeddingIndex").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops")
+    ),
+  })
+);
+
+export type BotEmbedding = InferSelectModel<typeof botEmbeddings>;
+
+
+
