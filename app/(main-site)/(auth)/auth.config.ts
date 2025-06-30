@@ -79,7 +79,6 @@ export const authConfig = {
             .set({ emailVerified: new Date() })
             .where(eq(userTable.id, user.id));
 
-          // Generate and attach accessToken for OAuth users
           const accessToken = sign(
             { id: user.id, type: "oauth" },
             process.env.AUTH_SECRET as string
@@ -111,8 +110,6 @@ export const authConfig = {
       return true;
     },
     jwt({ token, user, account }) {
-      console.log("jwt callback", token, user, account);
-      // For OAuth logins, generate accessToken on first sign in
       if (account && account.provider !== "credentials") {
         const accessToken = sign(
           { id: token.id || user?.id, type: "oauth" },
@@ -122,11 +119,9 @@ export const authConfig = {
       } else if (user && (user as any).accessToken) {
         token.accessToken = (user as any).accessToken;
       }
-      // Ensure token.accessToken persists across sessions
       return token;
     },
     session({ session, token }) {
-      console.log("session callback", session, token);
       if (session.user) {
         session.user.id = token.id as string;
         if (token.accessToken) {

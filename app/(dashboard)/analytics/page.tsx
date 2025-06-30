@@ -1,12 +1,8 @@
-"use client";
-
-import { useSession } from "next-auth/react";
 import React from "react";
+import { auth } from "@/app/(main-site)/(auth)/auth";
 
-const AnalyticsPage = () => {
-  const session = useSession();
-  console.log(session);
+const page = async () => {
   return <div>AnalyticsPage</div>;
 };
 
-export default AnalyticsPage;
+export default page;
