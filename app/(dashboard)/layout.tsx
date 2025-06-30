@@ -5,6 +5,11 @@ import { Plus_Jakarta_Sans, Lora, IBM_Plex_Mono } from 'next/font/google';
 
 import '../globals.css';
 import { SessionProvider } from 'next-auth/react';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { DashboardSidebar } from '@/components/dashboard-sidebar';
+import { auth } from '../(main-site)/(auth)/auth';
+import { redirect } from 'next/navigation';
+
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://botbee.ai'),
@@ -61,6 +66,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth()
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+
   return (
     <html
       lang="en"
@@ -86,7 +97,15 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <Toaster position="top-center" />
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider>
+            <SidebarProvider>
+            <DashboardSidebar user={session?.user} />
+            <SidebarInset>
+            <SidebarTrigger className="-ml-1" />
+            {children}
+            </SidebarInset>
+            </SidebarProvider>
+            </SessionProvider>
         </ThemeProvider>
       </body>
     </html>
