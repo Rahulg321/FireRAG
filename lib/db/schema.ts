@@ -603,20 +603,17 @@ export const travel = pgTable("travel", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-
-
-
-export const language = pgEnum("language", ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Russian", "Chinese", "Japanese", "Korean"]);
-
-
-
-
+export const language = pgEnum("language", ["en-gb", "en-us"]);
 
 export const bot = pgTable("bot", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: text("name").notNull(),
   description: text("description"),
-  botLanguage: language("bot_language").notNull().default("English"),
+  avatar: text("avatar").notNull(),
+  greeting: text("greeting").notNull(),
+  urls: text("urls").array().notNull().default([]),
+  instructions: text("instructions").notNull(),
+  botLanguage: language("bot_language").notNull().default("en-gb"),
   userId: uuid("userId")
     .references(() => user.id)
     .notNull(),
@@ -625,11 +622,8 @@ export const bot = pgTable("bot", {
 
 export type Bot = InferSelectModel<typeof bot>;
 
-
-
-
-export const botDocuments = pgTable(
-  "bot_documents",
+export const botResources = pgTable(
+  "bot_resources",
   {
     id: uuid("id").notNull().defaultRandom(),
     botId: uuid("bot_id")
@@ -637,14 +631,13 @@ export const botDocuments = pgTable(
       .references(() => bot.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     description: text("description"),
-    content: text("content"),
-    fileUrl: text("file_url"),
     kind: varchar("kind", {
       enum: [
         "pdf",
         "doc",
         "docx",
         "txt",
+        "url",
         "jpg",
         "jpeg",
         "png",
@@ -659,7 +652,6 @@ export const botDocuments = pgTable(
     })
       .notNull()
       .default("pdf"),
-    tags: text("tags").array(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -673,35 +665,30 @@ export const botDocuments = pgTable(
   })
 );
 
-
-
-export const botEmbeddings = pgTable(
-  "bot_embeddings",
+export const botResourceEmbeddings = pgTable(
+  "bot_resource_embeddings",
   {
     id: uuid("id").notNull().defaultRandom(),
 
-    botDocumentId: uuid("bot_document_id")
+    botResourceId: uuid("bot_resource_id")
       .notNull()
-      .references(() => botDocuments.id, { onDelete: "cascade" }),
+      .references(() => botResources.id, { onDelete: "cascade" }),
 
-    content: text("content").notNull(),
+    content: text("content"),
     embedding: vector("embedding", { dimensions: 1536 }).notNull(),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.id] }),
-    botDocumentIdRef: foreignKey({
-      columns: [table.botDocumentId],
-      foreignColumns: [botDocuments.id],
+    botResourceIdRef: foreignKey({
+      columns: [table.botResourceId],
+      foreignColumns: [botResources.id],
     }),
 
-    embeddingIndex: index("embeddingIndex").using(
+    embeddingIndex: index("bot_resource_embedding_index").using(
       "hnsw",
       table.embedding.op("vector_cosine_ops")
     ),
   })
 );
 
-export type BotEmbedding = InferSelectModel<typeof botEmbeddings>;
-
-
-
+export type BotEmbedding = InferSelectModel<typeof botResourceEmbeddings>;

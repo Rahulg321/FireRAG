@@ -8,6 +8,13 @@
       "when": 1751263297853,
       "tag": "0000_flowery_juggernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1751372993333,
+      "tag": "0001_typical_ultimo",
+      "breakpoints": true
     }
   ]
 }

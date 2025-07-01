@@ -1,5 +1,7 @@
 import React from "react";
 import CreateBotMultistepForm from "./create-bot-multistep-form";
+import { auth } from "@/app/(main-site)/(auth)/auth";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Create New Bot",
@@ -14,9 +16,19 @@ const CreateNewBotPage = async ({
   const params = await searchParams;
   const currentStep = Number.parseInt((params.step as string) || "1");
 
+  const session = await auth();
+
+  if (!session) {
+    redirect("/login");
+  }
+
   return (
     <div>
-      <CreateBotMultistepForm currentStep={currentStep} />
+      <CreateBotMultistepForm
+        currentStep={currentStep}
+        userSession={session}
+        userId={session.user.id}
+      />
     </div>
   );
 };

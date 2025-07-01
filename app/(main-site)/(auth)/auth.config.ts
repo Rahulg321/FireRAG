@@ -110,14 +110,20 @@ export const authConfig = {
       return true;
     },
     jwt({ token, user, account }) {
+      // Always set token.id from user.id if user is present (on sign-in)
+      if (user) {
+        token.id = user.id;
+        if ((user as any).accessToken) {
+          token.accessToken = (user as any).accessToken;
+        }
+      }
+      // For OAuth, always refresh accessToken if account is present
       if (account && account.provider !== "credentials") {
         const accessToken = sign(
-          { id: token.id || user?.id, type: "oauth" },
+          { id: token.id, type: "oauth" },
           process.env.AUTH_SECRET as string
         );
         token.accessToken = accessToken;
-      } else if (user && (user as any).accessToken) {
-        token.accessToken = (user as any).accessToken;
       }
       return token;
     },
