@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useTransition, useState } from "react";
 import {
   Search,
   Plus,
@@ -11,6 +11,7 @@ import {
   Link,
   FileArchive,
   Link2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-
+import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -52,6 +53,7 @@ import AddDocumentDialog from "./add-document-dialog";
 import { Session } from "next-auth";
 import AddAudioDialog from "./add-audio-dialog";
 import AddUrlDialog from "./add-url-dialog";
+import { deleteBotResourceServerAction } from "@/lib/actions/delete-bot-resource-action";
 
 const getFileIcon = (fileType: string) => {
   switch (fileType) {
@@ -86,6 +88,9 @@ export default function DocumentsDashboard({
   const [selectedBot, setSelectedBot] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
+
+  const [isDeleting, startDeleting] = useTransition();
 
   // If no bots, show empty state
   if (!botsWithDocumentsCount || botsWithDocumentsCount.length === 0) {
@@ -329,9 +334,41 @@ export default function DocumentsDashboard({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction className="bg-destructive hover:bg-destructive/80">
-                            Delete
-                          </AlertDialogAction>
+                          <Button
+                            onClick={async () => {
+                              startDeleting(async () => {
+                                const response =
+                                  await deleteBotResourceServerAction(
+                                    document.id
+                                  );
+
+                                console.log(response);
+
+                                if (response.type === "success") {
+                                  toast.success(
+                                    "Document deleted successfully"
+                                  );
+                                  setIsAlertDialogOpen(false);
+                                } else {
+                                  toast.error(
+                                    response.message ||
+                                      "Failed to delete document"
+                                  );
+                                }
+                              });
+                            }}
+                            disabled={isDeleting}
+                            className="bg-destructive hover:bg-destructive/80"
+                          >
+                            {isDeleting ? (
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="size-4 animate-spin" />
+                                Deleting...
+                              </div>
+                            ) : (
+                              "Delete"
+                            )}
+                          </Button>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
