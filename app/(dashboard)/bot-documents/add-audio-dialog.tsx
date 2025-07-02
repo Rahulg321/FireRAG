@@ -1,0 +1,221 @@
+"use client";
+
+import { useState } from "react";
+import { FileText, Loader2, Plus } from "lucide-react";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { BotWithDocumentsCount } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Session } from "next-auth";
+import { toast } from "sonner";
+import { newAudioFormSchema } from "@/lib/schemas/new-audio-form-schema";
+import axios from "axios";
+
+const AddAudioDialog = ({
+  botsWithDocumentsCount,
+  userSession,
+}: {
+  botsWithDocumentsCount: BotWithDocumentsCount;
+  userSession: Session;
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const form = useForm<z.infer<typeof newAudioFormSchema>>({
+    resolver: zodResolver(newAudioFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      botId: "",
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof newAudioFormSchema>) => {
+    setIsLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", values.file);
+      formData.append("name", values.name);
+      formData.append("description", values.description);
+      formData.append("botId", values.botId);
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/add-resource`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${userSession.user.accessToken}`,
+          },
+        }
+      );
+      if (response.status !== 200) {
+        throw new Error("Failed to process file");
+      }
+
+      toast.success("Successful!!", {
+        description: `${values.name} created successfully`,
+      });
+      form.reset();
+    } catch (err) {
+      toast.error("Failed to create resource. Please try again.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Plus className="size-4 mr-2" />
+          Add Audio
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add Audio</DialogTitle>
+        </DialogHeader>
+        <div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="botId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bot</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a bot" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {botsWithDocumentsCount?.map((bot) => (
+                            <SelectItem key={bot.id} value={bot.id}>
+                              {bot.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormDescription>
+                      This is the name of the audio resource.
+                    </FormDescription>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormDescription>
+                      This is the description of the audio resource.
+                    </FormDescription>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="file"
+                render={({ field: { value, onChange, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Upload Audio</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="audio/*,.mp3,.wav,.ogg,.m4a"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            onChange(file);
+                          }
+                        }}
+                        {...field}
+                      />
+                    </FormControl>
+                    {value && (
+                      <p className="text-sm text-green-600 mt-1">
+                        <FileText className="inline mr-1 size-4" />
+                        {value.name} ({(value.size / 1024).toFixed(2)} KB)
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" disabled={isLoading} className="shrink-0">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Processing
+                  </>
+                ) : (
+                  <>Submit</>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddAudioDialog;

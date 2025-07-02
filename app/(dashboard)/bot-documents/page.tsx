@@ -44,6 +44,7 @@ const BotDocumentsPage = async ({
       <DocumentsDashboard
         botsWithDocumentsCount={botsWithDocumentsCount}
         botDocuments={botDocuments.documents}
+        userSession={userSession}
       />
     </div>
   );

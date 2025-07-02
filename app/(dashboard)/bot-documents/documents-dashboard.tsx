@@ -10,6 +10,7 @@ import {
   FileText,
   Link,
   FileArchive,
+  Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,15 +31,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -55,6 +48,10 @@ import {
 import { BotDocument, BotWithDocumentsCount } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import SearchDocumentFilter from "./search-document-filter";
+import AddDocumentDialog from "./add-document-dialog";
+import { Session } from "next-auth";
+import AddAudioDialog from "./add-audio-dialog";
+import AddUrlDialog from "./add-url-dialog";
 
 const getFileIcon = (fileType: string) => {
   switch (fileType) {
@@ -70,7 +67,7 @@ const getFileIcon = (fileType: string) => {
         <FileArchive className="size-4 text-yellow-500 dark:text-yellow-400" />
       );
     case "url":
-      return <Link className="size-4 text-accent" />;
+      return <Link2 className="size-4 text-accent-foreground" />;
     default:
       return <FileText className="size-4 text-muted-foreground" />;
   }
@@ -79,17 +76,16 @@ const getFileIcon = (fileType: string) => {
 export default function DocumentsDashboard({
   botsWithDocumentsCount,
   botDocuments,
+  userSession,
 }: {
   botsWithDocumentsCount: BotWithDocumentsCount;
   botDocuments: BotDocument;
+  userSession: Session;
 }) {
   const router = useRouter();
   const [selectedBot, setSelectedBot] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
-  const [isAddContentOpen, setIsAddContentOpen] = useState(false);
-  const [newDocumentContent, setNewDocumentContent] = useState("");
-  const [newDocumentName, setNewDocumentName] = useState("");
 
   // If no bots, show empty state
   if (!botsWithDocumentsCount || botsWithDocumentsCount.length === 0) {
@@ -253,76 +249,18 @@ export default function DocumentsDashboard({
             </div>
 
             <div className="flex flex-row flex-wrap gap-2 items-center mt-2 md:mt-0">
-              <Dialog
-                open={isAddContentOpen}
-                onOpenChange={setIsAddContentOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="size-4 mr-2" />
-                    Add Content
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Add New Document</DialogTitle>
-                    <DialogDescription>
-                      Add a new document to{" "}
-                      {selectedBot === "all"
-                        ? "your bots"
-                        : selectedBotData?.name || "the selected bot"}
-                      .
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    {selectedBot === "all" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="bot-select">Select Bot</Label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose a bot" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {botsWithDocumentsCount?.map((bot) => (
-                              <SelectItem key={bot.id} value={bot.id}>
-                                {bot.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      <Label htmlFor="document-name">Document Name</Label>
-                      <Input
-                        id="document-name"
-                        placeholder="Enter document name"
-                        value={newDocumentName}
-                        onChange={(e) => setNewDocumentName(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="document-content">Content</Label>
-                      <Textarea
-                        id="document-content"
-                        placeholder="Paste your content here or upload a file..."
-                        value={newDocumentContent}
-                        onChange={(e) => setNewDocumentContent(e.target.value)}
-                        rows={6}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsAddContentOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button>Add Document</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <AddDocumentDialog
+                botsWithDocumentsCount={botsWithDocumentsCount}
+                userSession={userSession}
+              />
+              <AddUrlDialog
+                botsWithDocumentsCount={botsWithDocumentsCount}
+                userSession={userSession}
+              />
+              <AddAudioDialog
+                botsWithDocumentsCount={botsWithDocumentsCount}
+                userSession={userSession}
+              />
             </div>
           </div>
         </div>
@@ -417,10 +355,6 @@ export default function DocumentsDashboard({
                   ? "You haven't added any documents yet"
                   : `No documents found for ${selectedBotData?.name}`}
             </p>
-            <Button onClick={() => setIsAddContentOpen(true)}>
-              <Plus className="size-4 mr-2" />
-              Add Your First Document
-            </Button>
           </div>
         )}
       </div>
