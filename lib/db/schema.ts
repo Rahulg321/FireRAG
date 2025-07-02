@@ -611,6 +611,7 @@ export const bot = pgTable("bot", {
   description: text("description"),
   avatar: text("avatar").notNull(),
   greeting: text("greeting").notNull(),
+  tone: text("tone").notNull().default("professional"),
   urls: text("urls").array().notNull().default([]),
   instructions: text("instructions").notNull(),
   botLanguage: language("bot_language").notNull().default("en-gb"),
@@ -630,6 +631,7 @@ export const botResources = pgTable(
       .notNull()
       .references(() => bot.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    fileSize: text("file_size").notNull(),
     description: text("description"),
     kind: varchar("kind", {
       enum: [
@@ -652,6 +654,9 @@ export const botResources = pgTable(
     })
       .notNull()
       .default("pdf"),
+    userId: uuid("userId")
+      .references(() => user.id)
+      .notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -660,7 +665,10 @@ export const botResources = pgTable(
       columns: [pgTable.botId],
       foreignColumns: [bot.id],
     }),
-
+    userIdRef: foreignKey({
+      columns: [pgTable.userId],
+      foreignColumns: [user.id],
+    }),
     pk: primaryKey({ columns: [pgTable.id] }),
   })
 );
