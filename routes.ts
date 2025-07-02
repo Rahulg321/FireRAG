@@ -38,7 +38,13 @@ export const PROTECTED_BASE_ROUTES = ["/dashboard", "/admin"];
  */
 export const DEFAULT_LOGIN_REDIRECT = "/";
 
-export const PUBLIC_ROUTES = ["/", "/new-password", "/new-verification"];
+export const PUBLIC_ROUTES = [
+  "/",
+  "/new-password",
+  "/new-verification",
+  "/embed",
+  "/embed/[botId]",
+];
 
 // export const PUBLIC_ROUTES = [""];
 // export const PUBLIC_ROUTES = [""];
