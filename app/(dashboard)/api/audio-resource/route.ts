@@ -7,11 +7,13 @@ import {
   generateEmbeddingsFromChunks,
   generateChunksFromText,
 } from "@/lib/ai/embedding";
-import { embeddings as embeddingsTable, botResources } from "@/lib/db/schema";
+import { botResources, botResourceEmbeddings } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(main-site)/(auth)/auth";
 
 export async function POST(req: NextRequest) {
+  console.log("add-audio-resource route");
+
   const userSession = await auth();
 
   if (!userSession) {
@@ -23,8 +25,6 @@ export async function POST(req: NextRequest) {
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
   const botId = formData.get("botId") as string;
-
-  console.log(userSession);
 
   const validatedData = newAudioFormSchema.safeParse({
     name,
@@ -106,9 +106,9 @@ export async function POST(req: NextRequest) {
 
     console.log("resource created", resource);
 
-    await db.insert(embeddingsTable).values(
+    await db.insert(botResourceEmbeddings).values(
       embeddings.map((embedding) => ({
-        resourceId: resource.id,
+        botResourceId: resource.id,
         ...embedding,
       }))
     );

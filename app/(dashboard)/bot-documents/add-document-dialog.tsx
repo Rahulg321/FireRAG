@@ -148,6 +148,7 @@ const AddDocumentDialog = ({
         form.reset();
         setFile(null);
         setError(null);
+        setOpen(false);
       } catch (err) {
         toast.error(
           err instanceof Error

@@ -1,6 +1,6 @@
 import FirecrawlApp, { type ScrapeResponse } from "@mendable/firecrawl-js";
 
-const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_AI_API_KEY });
+const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 
 /**
  * Scrapes a website and returns the markdown and html content

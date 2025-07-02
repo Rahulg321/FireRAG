@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { FileText, Loader2, Plus } from "lucide-react";
 import {
   Form,
@@ -47,7 +47,7 @@ const AddAudioDialog = ({
   botsWithDocumentsCount: BotWithDocumentsCount;
   userSession: Session;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
 
   const form = useForm<z.infer<typeof newAudioFormSchema>>({
@@ -60,38 +60,34 @@ const AddAudioDialog = ({
   });
 
   const onSubmit = async (values: z.infer<typeof newAudioFormSchema>) => {
-    setIsLoading(true);
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.append("file", values.file);
+        formData.append("name", values.name);
+        formData.append("description", values.description);
+        formData.append("botId", values.botId);
+        formData.append("userId", userSession.user.id);
 
-    try {
-      const formData = new FormData();
-      formData.append("file", values.file);
-      formData.append("name", values.name);
-      formData.append("description", values.description);
-      formData.append("botId", values.botId);
+        const response = await fetch(`/api/audio-resource`, {
+          method: "POST",
+          body: formData,
+        });
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/add-resource`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${userSession.user.accessToken}`,
-          },
+        if (response.status !== 200) {
+          throw new Error("Failed to process file");
         }
-      );
-      if (response.status !== 200) {
-        throw new Error("Failed to process file");
-      }
 
-      toast.success("Successful!!", {
-        description: `${values.name} created successfully`,
-      });
-      form.reset();
-    } catch (err) {
-      toast.error("Failed to create resource. Please try again.");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
+        toast.success("Successful!!", {
+          description: `${values.name} created successfully`,
+        });
+        form.reset();
+        setOpen(false);
+      } catch (err) {
+        toast.error("Failed to create resource. Please try again.");
+        console.error(err);
+      }
+    });
   };
 
   return (
@@ -200,11 +196,11 @@ const AddAudioDialog = ({
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isLoading} className="shrink-0">
-                {isLoading ? (
+              <Button type="submit" disabled={isPending} className="shrink-0">
+                {isPending ? (
                   <>
                     <Loader2 className="mr-2 size-4 animate-spin" />
-                    Processing
+                    Adding...
                   </>
                 ) : (
                   <>Submit</>
