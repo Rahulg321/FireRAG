@@ -25,6 +25,7 @@ const getBotData = async (id: string) => {
 };
 
 export default function BotPage() {
+  console.log("BotPage");
   const params = useParams();
   const [isInIframe, setIsInIframe] = useState(false);
   const [botData, setBotData] = useState(null);

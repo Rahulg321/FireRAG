@@ -6,22 +6,31 @@ import {
   PUBLIC_ROUTES,
   PROTECTED_BASE_ROUTES,
 } from "./routes";
+import { NextRequest, NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+export default async function middleware(req: NextRequest) {
   const { nextUrl } = req;
 
-  const isLoggedIn = !!req.auth;
-
+  console.log("middleware", nextUrl.pathname);
+  // Run auth only for protected routes
   const isProtectedRoute = PROTECTED_BASE_ROUTES.some((route) =>
     nextUrl.pathname.startsWith(route)
   );
   const isPublicRoute = PUBLIC_ROUTES.includes(nextUrl.pathname);
   const isAuthRoute = AUTH_ROUTES.includes(nextUrl.pathname);
 
-  if (isProtectedRoute && !isLoggedIn) {
-    return Response.redirect(new URL("/login", nextUrl));
+  // Only check auth for protected routes
+  let isLoggedIn = false;
+  if (isProtectedRoute) {
+    const session = await auth();
+    isLoggedIn = !!session;
+    if (!isLoggedIn) {
+      console.log("inside protected route");
+      console.log("protected route", nextUrl.pathname);
+      return Response.redirect(new URL("/login", nextUrl));
+    }
   }
 
   if (isAuthRoute && isLoggedIn) {
@@ -29,9 +38,12 @@ export default auth((req) => {
   }
 
   if (isPublicRoute) {
-    return;
+    console.log("inside public route");
+    return NextResponse.next();
   }
-});
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],

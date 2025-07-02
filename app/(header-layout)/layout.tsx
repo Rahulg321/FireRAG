@@ -65,18 +65,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
-
   return (
     <html
       lang="en"
-      // `next-themes` injects an extra classname to the body element to avoid
-      // visual flicker before hydration. Hence the `suppressHydrationWarning`
-      // prop is necessary to avoid the React hydration mismatch warning.
-      // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
       suppressHydrationWarning
       className={`${plusJakartaSans.variable} ${lora.variable} ${ibmPlexMono.variable}`}
     >
@@ -95,11 +86,9 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <Toaster position="top-center" />
-          <SessionProvider>
-            <Header />
-            {children}
-            <Footer />
-          </SessionProvider>
+          <Header />
+          {children}
+          <Footer />
         </ThemeProvider>
       </body>
     </html>
