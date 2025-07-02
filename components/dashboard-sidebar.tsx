@@ -16,6 +16,7 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  FileText,
 } from "lucide-react";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import {
@@ -68,6 +69,11 @@ const data = {
       icon: ChartBar,
     },
     {
+      title: "Created Bots",
+      url: "/created-bots",
+      icon: Bot,
+    },
+    {
       title: "Playground",
       url: "/playground",
       icon: SquareTerminal,
@@ -76,6 +82,11 @@ const data = {
       title: "Models",
       url: "/models",
       icon: Bot,
+    },
+    {
+      title: "Bot Documents",
+      url: "/bot-documents",
+      icon: FileText,
     },
     {
       title: "Chat Record",

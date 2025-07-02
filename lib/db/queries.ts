@@ -29,6 +29,7 @@ import {
   stream,
   passwordResetToken,
   verificationToken,
+  bot,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
 import { generateUUID } from '../utils';
@@ -128,6 +129,24 @@ export async function getPasswordResetTokenByToken(token: string) {
     return null;
   }
 }
+
+
+
+/**
+ * Get created bots by user id
+ * @param userId - The id of the user
+ * @returns The created bots
+ */
+export async function getCreatedBotsByUserId(userId: string) {
+  try {
+    const foundCreatedBots = await db.select().from(bot).where(eq(bot.userId, userId));
+    return foundCreatedBots;
+  } catch (error) {
+    console.log("An error occured trying to get created bots by user id", error);
+    return null;
+  }
+}
+
 
 /**
  * Get a verification token by token
