@@ -17,14 +17,8 @@ import {
   Settings2,
   SquareTerminal,
   FileText,
+  Mic,
 } from "lucide-react";
-import { ChevronRight, type LucideIcon } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-
 import {
   Sidebar,
   SidebarContent,
@@ -88,6 +82,12 @@ const data = {
       url: "/bot-documents",
       icon: FileText,
     },
+    {
+      title: "Live Audio Chat",
+      url: `/live-audio-chat`,
+      icon: Mic,
+    },
+
     {
       title: "Chat Record",
       url: "/chat-record",

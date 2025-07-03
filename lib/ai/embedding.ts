@@ -1,4 +1,4 @@
-import { embedMany } from "ai";
+import { embed, embedMany } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { encoding_for_model } from "tiktoken";
 
@@ -32,6 +32,15 @@ export function rowsToTextChunks(
 
   return chunks;
 }
+
+export const generateEmbedding = async (value: string): Promise<number[]> => {
+  const input = value.replaceAll("\\n", " ");
+  const { embedding } = await embed({
+    model: embeddingModel,
+    value: input,
+  });
+  return embedding;
+};
 
 /**
  * This function is used to generate embeddings from chunks of text
@@ -102,4 +111,3 @@ export async function generateChunksFromText(text: string) {
 
   return { chunks };
 }
-

@@ -614,6 +614,7 @@ export const bot = pgTable("bot", {
   tone: text("tone").notNull().default("professional"),
   urls: text("urls").array().notNull().default([]),
   instructions: text("instructions").notNull(),
+  brandGuidelines: text("brand_guidelines"),
   botLanguage: language("bot_language").notNull().default("en-gb"),
   userId: uuid("userId")
     .references(() => user.id)

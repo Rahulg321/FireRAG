@@ -86,6 +86,15 @@ export function SidebarUserNav({ user }: { user: User }) {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                data-testid="user-nav-item-theme"
+                className="cursor-pointer"
+                onSelect={() => router.push(`/profile/${user.id}`)}
+              >
+                Profile
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
                 className="cursor-pointer"
                 onClick={() => router.push("/dashboard")}
               >
