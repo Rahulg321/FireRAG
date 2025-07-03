@@ -1,12 +1,13 @@
 import { buildBotSystempPrompt } from "@/lib/ai/bot-base-prompt";
 import { getInformation } from "@/lib/ai/tools/find-relevant-content";
-import { openaiProvider } from "@/lib/ai/providers";
+import { googleAISDKProvider } from "@/lib/ai/providers";
 import { streamText } from "ai";
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   const body = await req.json();
+
   const {
     messages,
     botId,
@@ -18,8 +19,19 @@ export async function POST(req: Request) {
     botName,
   } = body;
 
+  const customMessages = [
+    {
+      role: "user",
+      content: `The Bot Name is ${botName} and the botId is ${botId}`,
+    },
+    ...messages,
+  ];
+
+  console.log(customMessages);
+
   const result = streamText({
-    model: openaiProvider("gpt-4o"),
+    model: googleAISDKProvider("gemini-2.0-flash"),
+    maxSteps: 5,
     system: buildBotSystempPrompt({
       botName,
       instructions,
@@ -28,9 +40,14 @@ export async function POST(req: Request) {
       greeting,
       brandGuidelines,
     }),
-    messages,
+    messages: customMessages,
     tools: { getInformation },
   });
 
-  return result.toDataStreamResponse();
+  return result.toDataStreamResponse({
+    getErrorMessage: (error) => {
+      console.error(error);
+      return "An error occurred";
+    },
+  });
 }

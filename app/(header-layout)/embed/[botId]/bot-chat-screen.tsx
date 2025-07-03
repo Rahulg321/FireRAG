@@ -16,9 +16,11 @@ const BotChatScreen = ({ bot }: { bot: Bot }) => {
     error,
     reload,
   } = useChat({
+    maxSteps: 5,
     api: "/api/bot-chat",
     body: {
       botId: bot.id,
+      botName: bot.name,
       language: bot.botLanguage,
       greeting: bot.greeting,
       brandGuidelines: bot.brandGuidelines,
@@ -52,27 +54,85 @@ const BotChatScreen = ({ bot }: { bot: Bot }) => {
           </div>
         )}
 
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-[80%] rounded-lg px-4 py-3 bg-muted text-foreground dark:bg-muted/80 dark:text-foreground`}
-            >
-              <div className="text-sm font-medium mb-1">
-                {message.role === "user" ? "You" : "AI"}
+        {messages.map(
+          (message) => (
+            console.log(message),
+            (
+              <div
+                key={message.id}
+                className={`flex ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-lg px-4 py-3 text-foreground dark:text-foreground`}
+                >
+                  <div className="text-sm font-medium mb-1">
+                    {message.role === "user" ? "You" : "AI"}
+                  </div>
+
+                  {message.parts.map((part, idx) => {
+                    switch (part.type) {
+                      // render text parts as simple text:
+                      case "text":
+                        return (
+                          <ReactMarkdown
+                            key={idx}
+                            className="prose prose-sm dark:prose-invert"
+                          >
+                            {part.text}
+                          </ReactMarkdown>
+                        );
+
+                      case "tool-invocation": {
+                        const callId = part.toolInvocation.toolCallId;
+
+                        switch (part.toolInvocation.toolName) {
+                          case "getInformation": {
+                            switch (part.toolInvocation.state) {
+                              case "call":
+                                return (
+                                  <div key={callId}>Getting information...</div>
+                                );
+                              case "result":
+                                return (
+                                  <div
+                                    key={callId}
+                                    className="my-4 md:my-8  space-y-2 bg-muted rounded-lg p-2 text-foreground dark:text-foreground"
+                                  >
+                                    Information:
+                                    <ul>
+                                      {part.toolInvocation.result && (
+                                        <div className="space-y-2">
+                                          <div>
+                                            Similarity:{" "}
+                                            {
+                                              part.toolInvocation.result
+                                                .similarity
+                                            }
+                                          </div>
+                                          <h3>Citations</h3>
+                                          <ReactMarkdown className="prose prose-sm dark:prose-invert">
+                                            {part.toolInvocation.result.content}
+                                          </ReactMarkdown>
+                                        </div>
+                                      )}
+                                    </ul>
+                                  </div>
+                                );
+                            }
+                          }
+                          default:
+                            return null;
+                        }
+                      }
+                    }
+                  })}
+                </div>
               </div>
-              <div className="prose max-w-none">
-                <ReactMarkdown className="prose prose-sm dark:prose-invert">
-                  {message.content}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </div>
-        ))}
+            )
+          )
+        )}
 
         {error && (
           <div className="flex flex-col items-center justify-center py-8 text-center">
